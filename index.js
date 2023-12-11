@@ -8,6 +8,7 @@ const ExcelJS = require('exceljs')
 
 app.use(express.json());
 
+// Sample function to generate an Excel file
 
 
 app.get('/', (req, res) => {
@@ -48,30 +49,22 @@ app.get('/print', async (req, res) => {
 
         pdfDoc.pipe(writeStream);
 
-        const table = {
-            headers: [],
-            rows: []
-        };
+        const columnSpacing = 100;
+        const rowHeight = 30;
+        const fontSize = 12;
+        const startX = 50; // Initial X position for the table
+        let currentX = startX;
+        let currentY = 50; // Initial Y position for the table
 
         worksheet.eachRow((row, rowIndex) => {
-            if (rowIndex === 1) {
-                // Get headers from the first row
-                row.eachCell((cell) => {
-                    table.headers.push(cell.value);
-                });
-            } else {
-                // Get data rows
-                const rowData = [];
-                row.eachCell((cell) => {
-                    rowData.push(cell.value);
-                });
-                table.rows.push(rowData);
-            }
-        });
+            currentX = startX; // Reset X position for new row
 
-        pdfDoc.table(table, {
-            prepareHeader: () => pdfDoc.fontSize(12),
-            prepareRow: (row, i) => pdfDoc.fontSize(12).text(row.join('\t\t'), { continued: true }),
+            row.eachCell((cell, colIndex) => {
+                pdfDoc.fontSize(fontSize).text(cell.text, currentX, currentY, { lineBreak: false });
+                currentX += columnSpacing;
+            });
+
+            currentY += rowHeight; // Move to the next row
         });
 
         pdfDoc.end();
